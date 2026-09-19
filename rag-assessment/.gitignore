@@ -1,0 +1,42 @@
+# Python & Virtual Environment
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Environment Variables & Secrets
+# Backend — never commit real secrets (Groq API key lives here)
+rag-assessment/backend/.env
+rag-assessment/backend/.env.local
+
+# Frontend — no secrets should live here, but ignore anyway as a safety net
+rag-assessment/frontend/.env
+rag-assessment/frontend/.env.local
+
+# Catch-all for any other .env variants that slip in
+*.env
+!*.env.example
+
+# Data & Vector Storage
+rag-assessment/backend/data/uploads/*
+!rag-assessment/backend/data/uploads/.gitkeep
+rag-assessment/backend/data/chroma_db/*
+!rag-assessment/backend/data/chroma_db/.gitkeep
+data/
+
+# Node & Frontend Build
+node_modules/
+dist/
+build/
+.npm/
+*.log
+
+# IDE & OS Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
