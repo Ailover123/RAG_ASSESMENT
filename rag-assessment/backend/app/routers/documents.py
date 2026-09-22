@@ -3,12 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.dependencies import get_vector_store
 from app.vectorstore.chroma_client import VectorStore
+from app.security import get_session_id
 
 router = APIRouter()
 
 
 @router.get("/documents")
 async def list_documents_endpoint(
+    session_id: str = Depends(get_session_id),
     vector_store: VectorStore = Depends(get_vector_store),
 ) -> Dict[str, Any]:
     """
@@ -23,10 +25,10 @@ async def list_documents_endpoint(
         JSON response with list of indexed document names: {"documents": [...]}
     """
     try:
-        documents = vector_store.list_documents()
+        documents = vector_store.list_documents(session_id)
         return {"documents": documents}
-    except Exception as exc:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch indexed documents: {str(exc)}",
-        ) from exc
+            detail="Indexed documents could not be loaded.",
+        )
