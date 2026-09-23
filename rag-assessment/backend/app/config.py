@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     CHROMA_PERSIST_DIR: Path = BASE_DIR / "data" / "chroma_db"
     CHROMA_COLLECTION_NAME: str = "rag_documents"
 
+    # Upload Security
+    MAX_UPLOAD_BYTES: int = 10 * 1024 * 1024
+
     # Chunking Configuration
     CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 50

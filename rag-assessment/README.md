@@ -34,7 +34,7 @@ rag-assessment/
 1. **Document Ingestion**: Multi-format document parser (PDF, DOCX, PPTX) extracts normalized `Document` objects.
 2. **Chunking**: Splits extracted document text using recursive/semantic chunking strategies with configurable overlap.
 3. **Embedding**: Generates dense vector representations using `sentence-transformers`.
-4. **Vector Store**: Indexes and stores chunks and embeddings into persistent ChromaDB.
+4. **Vector Store**: Indexes and stores chunks and embeddings in persistent ChromaDB, scoped by the browser session boundary.
 5. **Retrieval & LLM Generation**: Queries ChromaDB for top-k matching contexts, injects them into structured prompts, and streams responses via Groq.
 
 ---
@@ -79,3 +79,11 @@ npm run dev
 ```
 
 Frontend application will be accessible at [http://localhost:5173](http://localhost:5173).
+
+
+## Upload and data boundaries
+
+- Uploads accept PDF, DOCX, and PPTX files up to 10 MB. The backend validates both the extension and file signature/package structure.
+- The original filename is sanitized for display. Files are written with random storage names and deleted after ingestion, preventing traversal and accidental overwrite.
+- The browser sends an opaque `X-Session-ID`. Uploads, document lists, and retrieval are filtered to that session. This is an isolation boundary for the current unauthenticated app, not user authentication; a production multi-user deployment should replace it with an authenticated user or tenant ID.
+- Client responses use safe error messages. Detailed exceptions remain in server logs.

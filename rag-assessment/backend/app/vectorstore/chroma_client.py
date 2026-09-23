@@ -53,7 +53,7 @@ class VectorStore:
             metadata={"hnsw:space": "cosine"},
         )
 
-    def add(self, chunks: List[Chunk], embeddings: List[List[float]]) -> List[str]:
+    def add(self, chunks: List[Chunk], embeddings: List[List[float]], session_id: str) -> List[str]:
         """
         Add chunked documents and their corresponding vector embeddings to ChromaDB.
 
@@ -79,6 +79,7 @@ class VectorStore:
             meta: Dict[str, Union[str, int, float, bool]] = {
                 "source": str(chunk.source),
                 "chunk_index": int(chunk.chunk_index),
+                "session_id": session_id,
             }
 
             if chunk.page is not None:
@@ -105,6 +106,7 @@ class VectorStore:
         self,
         query_embedding: List[float],
         top_k: int = 5,
+        session_id: str = "",
     ) -> List[Dict[str, Any]]:
         """
         Run similarity search against the indexed vector collection.
@@ -124,7 +126,11 @@ class VectorStore:
         if not query_embedding:
             return []
 
-        total_count = self.collection.count()
+        if not session_id:
+            return []
+
+        session_data = self.collection.get(where={"session_id": session_id}, include=[])
+        total_count = len(session_data.get("ids", []))
         if total_count == 0:
             return []
 
@@ -133,6 +139,7 @@ class VectorStore:
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=n_results,
+            where={"session_id": session_id},
             include=["documents", "metadatas", "distances"],
         )
 
@@ -161,17 +168,17 @@ class VectorStore:
 
         return output
 
-    def list_documents(self) -> List[str]:
+    def list_documents(self, session_id: str) -> List[str]:
         """
         Retrieve unique source filenames currently indexed in the vector store.
 
         Returns:
             List[str]: Alphabetically sorted list of distinct document filenames.
         """
-        if self.collection.count() == 0:
+        if not session_id:
             return []
 
-        data = self.collection.get(include=["metadatas"])
+        data = self.collection.get(where={"session_id": session_id}, include=["metadatas"])
         metadatas = data.get("metadatas", [])
         if not metadatas:
             return []

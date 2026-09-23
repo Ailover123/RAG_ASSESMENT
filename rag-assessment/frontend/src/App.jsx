@@ -5,6 +5,20 @@ import mermaid from 'mermaid';
 import './App.css';
 
 const API_BASE = "";
+const SESSION_KEY = "rag-assessment-session";
+
+function getSessionId() {
+  let sessionId = window.sessionStorage.getItem(SESSION_KEY);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID().replaceAll('-', '');
+    window.sessionStorage.setItem(SESSION_KEY, sessionId);
+  }
+  return sessionId;
+}
+
+function sessionHeaders(extra = {}) {
+  return { ...extra, 'X-Session-ID': getSessionId() };
+}
 
 mermaid.initialize({
   startOnLoad: false,
@@ -176,7 +190,7 @@ export default function App() {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch(`${API_BASE}/documents`);
+      const response = await fetch(`${API_BASE}/documents`, { headers: sessionHeaders() });
       if (!response.ok) {
         throw new Error('Unable to load documents.');
       }
@@ -203,6 +217,7 @@ export default function App() {
     try {
       const response = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
+        headers: sessionHeaders(),
         body: formData,
       });
       const data = await response.json();
@@ -237,7 +252,7 @@ export default function App() {
     try {
       const response = await fetch(`${API_BASE}/query`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: sessionHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ question: cleanQuestion, top_k: 5 }),
       });
       if (!response.ok) {
@@ -354,6 +369,7 @@ export default function App() {
               {isUploading ? 'Uploading...' : 'Upload'}
             </button>
           </form>
+          <p className="upload-help">PDF, DOCX, or PPTX. Maximum 10 MB. Documents stay isolated to this browser session.</p>
           {uploadStatus && <p className="status-message">{uploadStatus}</p>}
         </section>
 
