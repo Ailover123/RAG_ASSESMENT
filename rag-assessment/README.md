@@ -84,6 +84,7 @@ Frontend application will be accessible at [http://localhost:5173](http://localh
 ## Upload and data boundaries
 
 - Uploads accept PDF, DOCX, and PPTX files up to 10 MB. The backend validates both the extension and file signature/package structure.
+- DOCX/PPTX archives are also bounded after decompression: at most 5000 entries, 25 MB per member, and 50 MB total expanded size (all configurable), blocking ZIP-bomb resource exhaustion.
 - The original filename is sanitized for display. Files are written with random storage names and deleted after ingestion, preventing traversal and accidental overwrite.
 - The browser sends an opaque `X-Session-ID`. Uploads, document lists, and retrieval are filtered to that session. This is an isolation boundary for the current unauthenticated app, not user authentication; a production multi-user deployment should replace it with an authenticated user or tenant ID.
 - Client responses use safe error messages. Detailed exceptions remain in server logs.
