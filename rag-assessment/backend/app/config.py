@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # Groq API Configuration
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "llama-3.1-70b-versatile"
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
 
     # Embedding Model Configuration
     EMBEDDING_MODEL_NAME: str = "all-MiniLM-L6-v2"
@@ -23,6 +23,10 @@ class Settings(BaseSettings):
 
     # Upload Security
     MAX_UPLOAD_BYTES: int = 10 * 1024 * 1024
+    # Office archive (docx/pptx) expansion limits - guards against ZIP bombs
+    MAX_OFFICE_EXPANDED_BYTES: int = 50 * 1024 * 1024  # aggregate uncompressed size of members
+    MAX_OFFICE_ENTRY_BYTES: int = 25 * 1024 * 1024     # any single uncompressed member
+    MAX_OFFICE_ENTRIES: int = 5000                     # member count
 
     # Chunking Configuration
     CHUNK_SIZE: int = 500

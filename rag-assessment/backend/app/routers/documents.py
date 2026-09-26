@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -6,6 +7,7 @@ from app.vectorstore.chroma_client import VectorStore
 from app.security import get_session_id
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/documents")
@@ -28,6 +30,7 @@ async def list_documents_endpoint(
         documents = vector_store.list_documents(session_id)
         return {"documents": documents}
     except Exception:
+        logger.exception("Document listing failed", extra={"session_id": session_id})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Indexed documents could not be loaded.",

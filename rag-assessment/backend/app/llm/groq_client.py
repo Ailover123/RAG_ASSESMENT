@@ -4,7 +4,7 @@ from app.config import settings
 from app.llm.prompt_templates import build_rag_prompt
 
 
-DEFAULT_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_MODEL = "openai/gpt-oss-120b"
 
 
 class GroqClient:
@@ -24,8 +24,6 @@ class GroqClient:
         """
         self.api_key = api_key or settings.GROQ_API_KEY
         self.model = model or settings.GROQ_MODEL or DEFAULT_MODEL
-        if self.model == "llama-3.1-70b-versatile":
-            self.model = DEFAULT_MODEL
 
         if not self.api_key:
             raise ValueError(

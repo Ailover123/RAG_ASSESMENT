@@ -296,6 +296,16 @@ export default function App() {
             );
             return;
           }
+          if (eventData?.type === 'error') {
+            setConversation((currentConversation) =>
+              currentConversation.map((entry, index) =>
+                index === conversationIndex
+                  ? { ...entry, answer: `Error: ${eventData.message || 'The answer could not be completed.'}` }
+                  : entry
+              )
+            );
+            return;
+          }
         } catch {
           // Support plain-text SSE responses from older backend versions.
         }

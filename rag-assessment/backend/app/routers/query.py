@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import AsyncGenerator
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -11,6 +12,7 @@ from app.vectorstore.chroma_client import VectorStore
 from app.security import get_session_id
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class QueryRequest(BaseModel):
@@ -60,6 +62,7 @@ async def query_endpoint(
             session_id=session_id,
         )
     except Exception:
+        logger.exception("Document search failed", extra={"session_id": session_id})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="The document search could not be completed.",
@@ -88,6 +91,7 @@ async def query_endpoint(
             for token in groq_client.generate_stream(clean_question, retrieved_chunks):
                 yield f"data: {json.dumps({'type': 'token', 'token': token})}\n\n"
         except Exception:
+            logger.exception("Answer generation failed", extra={"session_id": session_id})
             yield f"data: {json.dumps({'type': 'error', 'message': 'The answer could not be completed.'})}\n\n"
 
     return StreamingResponse(
