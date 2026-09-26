@@ -41,6 +41,33 @@ def validate_signature(path: Path, extension: str) -> None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File content does not match its extension.")
 
 
+def validate_office_expansion(
+    path: Path,
+    *,
+    max_entries: int = settings.MAX_OFFICE_ENTRIES,
+    max_entry_bytes: int = settings.MAX_OFFICE_ENTRY_BYTES,
+    max_expanded_bytes: int = settings.MAX_OFFICE_EXPANDED_BYTES,
+) -> None:
+    """Reject Office archives whose decompressed footprint exceeds limits (ZIP bombs).
+
+    Reads only central-directory metadata; the archive is never extracted here.
+    """
+    try:
+        with zipfile.ZipFile(path) as archive:
+            entries = archive.infolist()
+    except (zipfile.BadZipFile, OSError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File content does not match its extension.")
+    if len(entries) > max_entries:
+        raise HTTPException(status_code=413, detail=f"Archive contains more than {max_entries} entries.")
+    total = 0
+    for info in entries:
+        if info.file_size > max_entry_bytes:
+            raise HTTPException(status_code=413, detail=f"Archive entry '{info.filename}' exceeds the {max_entry_bytes // (1024 * 1024)} MB per-file limit.")
+        total += info.file_size
+        if total > max_expanded_bytes:
+            raise HTTPException(status_code=413, detail=f"Archive exceeds the {max_expanded_bytes // (1024 * 1024)} MB expanded-size limit.")
+
+
 @router.post("/upload")
 async def upload_file(
     file: UploadFile = File(...),
@@ -67,6 +94,8 @@ async def upload_file(
                     raise HTTPException(status_code=413, detail=f"File exceeds the {settings.MAX_UPLOAD_BYTES // (1024 * 1024)} MB upload limit.")
                 await output.write(chunk)
         validate_signature(save_path, extension)
+        if extension in {".docx", ".pptx"}:
+            validate_office_expansion(save_path)
         documents = await asyncio.to_thread(extract_documents, save_path)
         for document in documents:
             document.source = safe_name
